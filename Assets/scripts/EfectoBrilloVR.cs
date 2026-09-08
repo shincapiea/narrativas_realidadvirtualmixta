@@ -1,46 +1,60 @@
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
 
 public class EfectoBrilloVR : MonoBehaviour
 {
-    [Tooltip("Asigna aquí el material brillante que creaste")]
     public Material materialBrillante;
-
     private Material[] materialesOriginales;
     private MeshRenderer meshRenderer;
+    private UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable grabInteractable;
 
     void Start()
     {
-        // Buscamos la malla de la paila
         meshRenderer = GetComponent<MeshRenderer>();
-
         if (meshRenderer != null)
         {
-            // Guardamos los materiales originales (acciaio, COLTELLO, etc.)
             materialesOriginales = meshRenderer.materials;
+        }
+
+        if (materialBrillante == null)
+        {
+            materialBrillante = Resources.Load<Material>("materialBrillante");
+        }
+
+        grabInteractable = GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
+        if (grabInteractable != null)
+        {
+            grabInteractable.selectEntered.AddListener(OnGrabbed);
+            grabInteractable.selectExited.AddListener(OnReleased);
         }
     }
 
-    // Esta función la conectaremos al evento de agarrar
+    void OnGrabbed(SelectEnterEventArgs args) {
+        // Ignorar si es un socket
+        if (args.interactorObject.GetType().Name.Contains("Socket")) return;
+        EncenderBrillo();
+    }
+
+    void OnReleased(SelectExitEventArgs args) {
+        // Si lo soltamos, o si un socket lo agarra, apagamos el brillo
+        ApagarBrillo();
+    }
+
     public void EncenderBrillo()
     {
         if (meshRenderer != null && materialBrillante != null)
         {
-            // Reemplazamos todos los materiales por el brillante
             Material[] temporal = new Material[materialesOriginales.Length];
             for (int i = 0; i < temporal.Length; i++)
-            {
                 temporal[i] = materialBrillante;
-            }
             meshRenderer.materials = temporal;
         }
     }
 
-    // Esta función la conectaremos al evento de soltar
     public void ApagarBrillo()
     {
         if (meshRenderer != null && materialesOriginales != null)
         {
-            // Restauramos los materiales originales exactos
             meshRenderer.materials = materialesOriginales;
         }
     }
